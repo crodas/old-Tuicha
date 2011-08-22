@@ -10,16 +10,20 @@
  */
 namespace Tuicha;
 
-class MongoCollection extends \MongoCollection {
-    public function find($query = array(), $fields = array()) {
+class MongoCollection extends \MongoCollection
+{
+    public function find($query = array(), $fields = array())
+    {
         return new MongoCursor($this, $query, $fields);
     }
 
-    public function create() {
+    public function create()
+    {
         return new MongoDocument($this);
     }
 
-    public function newDocument() {
+    public function newDocument()
+    {
         return $this->create();
     }
 }

@@ -10,39 +10,62 @@
  */
 namespace Tuicha;
 
-/**
- *  Simple function wrapping to avoid getting
- *  private/protected variables when this function 
- *  is called inside an object.
- *
- *  @return Array
- */
-function get_object_vars($object) {
-    return \get_object_vars($object);
-}
-
-class MongoDocument 
+class MongoDocument implements \ArrayAccess
 {
     protected $_pzCollection;
     protected $_pzCurrent;
+    protected $_pzDoc;
 
-    public function __construct(MongoCollection $collection, Array $doc = array()) {
+    public function __construct(MongoCollection $collection, Array $doc = array())
+    {
         $this->_pzCollection = $collection;
-        foreach ($doc as $prop => $val) {
-            $this->$prop = $val;
-        }
         $this->_pzCurrent = $doc;
+        $this->_pzDoc     = $doc;
     }
 
-    public function save($save=false, $fsync=false) {
-        $current = get_object_vars($this);
-        if (empty($this->_pzCurrent)) {
+    /* ArrayAccess {{{ */
+    public function offsetExists($index) 
+    {
+        return isset($this->_pzCurrent[$index]);
+    }
+
+    public function offsetGet($index) 
+    {
+        return $this->_pzCurrent[$index];
+    }
+
+    public function offsetSet($index, $value) 
+    {
+        $this->_pzCurrent[$index] = $value;
+    }
+
+    public function offsetUnset($index)
+    {
+        unset($this->_pzCurrent[$index]);
+    }
+    // }}}
+
+    // __get/__set {{{
+    public function __get($index) {
+        return $this->offsetGet($index);
+    }
+
+    public function __set($index, $value) {
+        return $this->offsetSet($index, $value);
+    }
+    // }}}
+
+    public function save($save=false, $fsync=false)
+    {
+        $current = $this->_pzCurrent;
+        if (empty($this->_pzDoc)) {
+            // insert, easy ;-)
             $this->_pzCollection->save($current);
-            $this->_pzCurrent = $current;
         } else {
+            // updates, a bit tricky
             $document = array();
-            $this->_getDocumentToSave($document, $this->_pzCurrent, $current);
-            $criteria = array('_id' => $this->_pzCurrent['_id']);
+            $this->_getDocumentToSave($document, $this->_pzDoc, $current);
+            $criteria = array('_id' => $this->_pzDoc['_id']);
             if (isset($document['$pull'])) {
                 /**
                  * $pulls with $set and $unset are invalid,
@@ -61,8 +84,23 @@ class MongoDocument
             }
             $this->_pzCollection->update($criteria, $document, compact('safe', 'fsync'));
         }
+        $this->_pzDoc = $current;
     }
 
+    // _getDocumentToSave(Array, Array, Array, null) {{{
+    /**
+     *  Perform a diff between the original document and the current one
+     *  and return an update-document to perform in the database.
+     *
+     *
+     *  @param array  &$document Query document
+     *  @param array  $original  Original document
+     *  @param array  $current   Current document
+     *  @param string $namespace Namespace in case of comparing arrays or subdocuments.
+     *
+     *
+     *  @return array
+     */
     protected function _getDocumentToSave(Array &$document, Array $original, Array $current, $namespace = null)
     {
         $zProp = array_keys($current);
@@ -86,5 +124,7 @@ class MongoDocument
             }
         }
     }
+    // }}}
+
 }
 

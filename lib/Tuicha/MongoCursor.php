@@ -10,15 +10,18 @@
  */
 namespace Tuicha;
 
-class MongoCursor extends \MongoCursor {
+class MongoCursor extends \MongoCursor
+{
     protected $col;
 
-    public function __construct(MongoCollection $col, $query = array(), $fields = array()) {
+    public function __construct(MongoCollection $col, $query = array(), $fields = array())
+    {
         parent::__construct($col->db->conn, (string)$col, $query, $fields);
         $this->col = $col;
     }
 
-    public function current() {
+    public function current()
+    {
         $doc = parent::current();
 
         return new MongoDocument($this->col, $doc);
