@@ -94,8 +94,8 @@ class MongoDocument implements \ArrayAccess
 
     protected function _compareArrayTypes($arr1, $arr2)
     {
-        $isArray1 = array_keys($arr1) == range(0, count($arr1) -1);
-        $isArray2 = array_keys($arr2) == range(0, count($arr2) -1);
+        $isArray1 = array_keys($arr1) === range(0, count($arr1) -1);
+        $isArray2 = array_keys($arr2) === range(0, count($arr2) -1);
 
         return $isArray1 == $isArray2;
     }
@@ -133,7 +133,7 @@ class MongoDocument implements \ArrayAccess
                 if (is_scalar($current[$prop]) || !isset($original[$prop]) || is_scalar($original[$prop])) {
                     $document['$set'][$name] = $current[$prop];
                 } else {
-                    if ($this->_compareArrayTypes($original[$prop], $current[$prop])) {
+                    if (!$this->_compareArrayTypes($original[$prop], $current[$prop])) {
                         $document['$set'][$name] = $current[$prop];
                     } else {
                         $this->_getDocumentToSave($document, $original[$prop], $current[$prop], $name);
