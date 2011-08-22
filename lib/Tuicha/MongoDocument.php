@@ -75,19 +75,29 @@ class MongoDocument implements \ArrayAccess
                  * so to make things easier we perform two 
                  * updates
                  */
-                foreach ($document['$pull'] as $field => $pull) {
-                    $tmp = array('$pull' => array($field => $pull));
-                    $this->_pzCollection->update(
-                        $criteria,
-                        $tmp,
-                        compact('safe', 'fsync')
-                    );
+                foreach ($document['$pull'] as $field => $pulls) {
+                    foreach($pulls as $pull) {
+                        $tmp = array('$pull' => array($field => $pull));
+                        $this->_pzCollection->update(
+                            $criteria,
+                            $tmp,
+                            compact('safe', 'fsync')
+                        );
+                    }
                 }
                 unset($document['$pull']);
             }
             $this->_pzCollection->update($criteria, $document, compact('safe', 'fsync'));
         }
         $this->_pzDoc = $current;
+    }
+
+    protected function _compareArrayTypes($arr1, $arr2)
+    {
+        $isArray1 = array_keys($arr1) == range(0, count($arr1) -1);
+        $isArray2 = array_keys($arr2) == range(0, count($arr2) -1);
+
+        return $isArray1 == $isArray2;
     }
 
     // _getDocumentToSave(Array, Array, Array, null) {{{
@@ -115,15 +125,40 @@ class MongoDocument implements \ArrayAccess
             } else {
                 $name = $prop;
             }
+
             if (!isset($original[$prop]) || $original[$prop] !== $current[$prop]) {
                 if ($name == '_id') {
                     throw new \MongoException("Modify on _id not allowed on update");
                 }
-                if (is_scalar($current[$prop]) || !isset($original[$prop])) {
+                if (is_scalar($current[$prop]) || !isset($original[$prop]) || is_scalar($original[$prop])) {
                     $document['$set'][$name] = $current[$prop];
                 } else {
-                    $this->_getDocumentToSave($document, $original[$prop], $current[$prop], $name);
+                    if ($this->_compareArrayTypes($original[$prop], $current[$prop])) {
+                        $document['$set'][$name] = $current[$prop];
+                    } else {
+                        $this->_getDocumentToSave($document, $original[$prop], $current[$prop], $name);
+                    }
                 }
+            }
+        }
+
+        foreach ($pProp as $prop) {
+            if (!isset($current[$prop])) {
+                if ($namespace) {
+                    if (is_numeric($prop)) {
+                        $document['$pull'][$namespace][] = $original[$prop];
+                    } else {
+                        $document['$unset'][$namespace . "." . $prop] = 1;
+                    }
+                } else {
+                    $document['$unset'][$prop] = 1;
+                }
+            }
+        }
+
+        foreach ($document as $key => $value) {
+            if (empty($value)) {
+                unset($document[$key]);
             }
         }
     }
