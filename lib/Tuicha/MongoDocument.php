@@ -26,11 +26,14 @@ class MongoDocument implements \ArrayAccess
     /* ArrayAccess {{{ */
     public function offsetExists($index) 
     {
-        return isset($this->_pzCurrent[$index]);
+        return array_key_exists($index, $this->_pzCurrent);
     }
 
     public function offsetGet($index) 
     {
+        if (!array_key_exists($index, $this->_pzCurrent)) {
+            return NULL;
+        }
         return $this->_pzCurrent[$index];
     }
 
@@ -114,7 +117,7 @@ class MongoDocument implements \ArrayAccess
             }
             if (!isset($original[$prop]) || $original[$prop] !== $current[$prop]) {
                 if ($name == '_id') {
-                    throw new ActiveMongo2_Exception("Mod on _id not allowed");
+                    throw new \MongoException("Modify on _id not allowed on update");
                 }
                 if (is_scalar($current[$prop]) || !isset($original[$prop])) {
                     $document['$set'][$name] = $current[$prop];
