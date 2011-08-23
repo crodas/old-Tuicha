@@ -75,7 +75,7 @@ class MongoDocument implements \ArrayAccess
     {
         $current = $this->_pzCurrent;
 
-        $args  = array('document' => $current, 'collection' => $this->_pzCollection);
+        $args  = array('document' => &$current, 'collection' => $this->_pzCollection);
         $pzCol = $this->_pzCollection->getName();
 
         // trigger events 
@@ -87,14 +87,17 @@ class MongoDocument implements \ArrayAccess
             // trigger events 
             self::$_pzListener->trigger('preInsert.' . $pzCol, $args);
             self::$_pzListener->trigger('preInsert', $args);
-            $this->_pzCollection->save($current);
+            if (!isset($current['_id'])) {
+                $current['_id'] = new \MongoId();
+            }
+            $this->_pzCollection->insert($current);
         } else {
             // updates, a bit tricky
             $document = array();
             $this->_getDocumentTosave($document, $this->_pzDoc, $current);
 
             // trigger events 
-            $args['document'] = $document;
+            $args['document'] = &$document;
             self::$_pzListener->trigger('preUpdate.' . $pzCol, $args);
             self::$_pzListener->trigger('preUpdate', $args);
 

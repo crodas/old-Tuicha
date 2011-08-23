@@ -15,6 +15,7 @@ class EventTest extends PHPUnit_Framework_TestCase
                 $that->assertTrue($args['collection'] instanceof MongoCollection);
                 $that->assertTrue($args['collection'] instanceof \Tuicha\MongoCollection);
                 $that->assertTrue($args['collection']->getName() == "events");
+                $args['document']['created'] = 1;
                 $GLOBALS['i']+=1;
             };
             $eventInsert = function($args) use ($that) {
@@ -23,6 +24,7 @@ class EventTest extends PHPUnit_Framework_TestCase
                 $that->assertTrue($args['collection'] instanceof MongoCollection);
                 $that->assertTrue($args['collection'] instanceof \Tuicha\MongoCollection);
                 $that->assertTrue($args['collection']->getName() == "events");
+                $that->assertEquals($args['document']['created'], 1);
                 $GLOBALS['i']+=2;
             };
             $eventUpdate = function($args) use ($that) {
