@@ -15,6 +15,7 @@ class MongoDocument implements \ArrayAccess
     protected $_pzCollection;
     protected $_pzCurrent;
     protected $_pzDoc;
+    protected static $_pzListener;
 
     public function __construct(MongoCollection $collection, Array $doc = array())
     {
@@ -58,16 +59,45 @@ class MongoDocument implements \ArrayAccess
     }
     // }}}
 
-    public function save($save=false, $fsync=false)
+    // save($safe $fsync) {{{
+    /**
+     *  safe($safe=false, $fsync=false)
+     *  
+     *  safe the current document in the database, internally
+     *  an insert or update is peformed
+     *
+     *  @param bool $safe
+     *  @param bool $fsync
+     *
+     *  @return $this
+     */
+    public function save($safe=false, $fsync=false)
     {
         $current = $this->_pzCurrent;
+
+        $args  = array('document' => $current, 'collection' => $this->_pzCollection);
+        $pzCol = $this->_pzCollection->getName();
+
+        // trigger events 
+        self::$_pzListener->trigger('preSave.' . $pzCol, $args);
+        self::$_pzListener->trigger('preSave', $args);
+
         if (empty($this->_pzDoc)) {
             // insert, easy ;-)
+            // trigger events 
+            self::$_pzListener->trigger('preInsert.' . $pzCol, $args);
+            self::$_pzListener->trigger('preInsert', $args);
             $this->_pzCollection->save($current);
         } else {
             // updates, a bit tricky
             $document = array();
-            $this->_getDocumentToSave($document, $this->_pzDoc, $current);
+            $this->_getDocumentTosave($document, $this->_pzDoc, $current);
+
+            // trigger events 
+            $args['document'] = $document;
+            self::$_pzListener->trigger('preUpdate.' . $pzCol, $args);
+            self::$_pzListener->trigger('preUpdate', $args);
+
             $criteria = array('_id' => $this->_pzDoc['_id']);
             if (isset($document['$pull'])) {
                 /**
@@ -90,8 +120,17 @@ class MongoDocument implements \ArrayAccess
             $this->_pzCollection->update($criteria, $document, compact('safe', 'fsync'));
         }
         $this->_pzDoc = $current;
-    }
 
+        return $this;
+    }
+    // }}}
+
+    // _compareArrayTypes($arr1, $arr2) {{{
+    /**
+     *  Check if a two sub documents are objects or arrays
+     *
+     *  @return bool
+     */
     protected function _compareArrayTypes($arr1, $arr2)
     {
         $isArray1 = array_keys($arr1) === range(0, count($arr1) -1);
@@ -99,8 +138,9 @@ class MongoDocument implements \ArrayAccess
 
         return $isArray1 == $isArray2;
     }
+    // }}} 
 
-    // _getDocumentToSave(Array, Array, Array, null) {{{
+    // _getDocumentTosave(Array, Array, Array, null) {{{
     /**
      *  Perform a diff between the original document and the current one
      *  and return an update-document to perform in the database.
@@ -114,7 +154,7 @@ class MongoDocument implements \ArrayAccess
      *
      *  @return array
      */
-    protected function _getDocumentToSave(Array &$document, Array $original, Array $current, $namespace = null)
+    protected function _getDocumentTosave(Array &$document, Array $original, Array $current, $namespace = null)
     {
         $zProp = array_keys($current);
         $pProp = array_keys($original);
@@ -136,7 +176,7 @@ class MongoDocument implements \ArrayAccess
                     if (!$this->_compareArrayTypes($original[$prop], $current[$prop])) {
                         $document['$set'][$name] = $current[$prop];
                     } else {
-                        $this->_getDocumentToSave($document, $original[$prop], $current[$prop], $name);
+                        $this->_getDocumentTosave($document, $original[$prop], $current[$prop], $name);
                     }
                 }
             }
@@ -164,5 +204,14 @@ class MongoDocument implements \ArrayAccess
     }
     // }}}
 
+    public static function Listener() {
+        if (self::$_pzListener === null) {
+            self::$_pzListener = new Event;
+        }
+        return self::$_pzListener;
+    }
+
 }
+
+MongoDocument::Listener();
 

@@ -10,8 +10,13 @@
  */
 namespace Tuicha;
 
+if (!class_exists('Mongo')) {
+    throw new \RuntimeException("You must install Mongo driver");
+}
+
 require __DIR__ . "/Tuicha/Mongo.php";
 require __DIR__ . "/Tuicha/MongoDB.php";
 require __DIR__ . "/Tuicha/MongoCollection.php";
 require __DIR__ . "/Tuicha/MongoCursor.php";
+require __DIR__ . "/Tuicha/Event.php";
 require __DIR__ . "/Tuicha/MongoDocument.php";

@@ -2,6 +2,28 @@
 
 class BasicTest extends PHPUnit_Framework_TestCase
 {
+    public function testConnect()
+    {
+        global $conn1, $conn2, $db1, $db2;
+
+        $conn1 = new Tuicha\Mongo;
+        $conn2 = new Mongo;
+        $db1 = $conn1->tuicha;
+        $db2 = $conn2->tuicha;
+        $this->assertTrue($conn1 instanceof Tuicha\Mongo);
+        $this->assertTrue($conn2 instanceof Mongo);
+        $this->assertTrue($db1 instanceof Tuicha\MongoDB);
+        $this->assertTrue($db2 instanceof MongoDB);
+    }
+    public function testCreateCollection()
+    {
+        global $db1;
+        $this->assertTrue($db1->createCollection('foo') instanceOf Tuicha\MongoCollection);
+    }
+
+    /**
+     * @depends testCreateCollection
+     */
     public function testInit()
     {
         global $conn1, $conn2;
@@ -23,9 +45,9 @@ class BasicTest extends PHPUnit_Framework_TestCase
             usleep(200000); 
         }
 
+        $this->assertFalse(is_null($db1->foo->findOneArray($obj)));
         $this->assertFalse(is_null($db2->foo->findOne($obj)));
-        $this->assertFalse(is_null($db1->foo->findOne($obj)));
-        $this->assertEquals($db2->foo->findOne($obj), $db1->foo->findOne($obj));
+        $this->assertEquals($db1->foo->findOneArray($obj), $db2->foo->findOne($obj));
 
         return $db2->foo->findOne($obj);
     }
@@ -70,11 +92,27 @@ class BasicTest extends PHPUnit_Framework_TestCase
         $tmp = $this->compareFindOne(array('_id' => 2));
         $this->assertEquals($tmp['foo'], $doc['foo']);
 
-        $doc['foo'] = array('bar' => 'foo');
+        $doc['foo'] = array('bar' => 'foo', array(1,2));
+        $doc->save();
+        $tmp = $this->compareFindOne(array('_id' => 2));
+        $this->assertEquals($tmp['foo'], $doc['foo']);
+
+        $doc['foo'] = array('bar' => 'foo', array(1,2, 'c' => 'foo'));
         $doc->save();
         $tmp = $this->compareFindOne(array('_id' => 2));
         $this->assertEquals($tmp['foo'], $doc['foo']);
     }
+
+    /**
+     *  @depends testSave
+     */
+    public function testFindOne()
+    {
+        global $db1;
+        $this->assertTrue($db1->foo->findOne() instanceOf Tuicha\MongoDocument);
+        $this->assertTrue(is_null($db1->foo->findOne(array('xxxx' => 'bar'))));
+    }
+
 
     /**
      *  @depends testSave

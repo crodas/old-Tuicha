@@ -17,6 +17,21 @@ class MongoCollection extends \MongoCollection
         return new MongoCursor($this, $query, $fields);
     }
 
+    public function findOneArray($query = array(), $fields = array())
+    {
+        return parent::findOne($query, $fields);
+    }
+
+    public function findOne($query = array(), $fields = array())
+    {
+        $doc = parent::findOne($query, $fields);
+        if (is_array($doc)) {
+            return new MongoDocument($this, $doc);
+        } else {
+            return NULL;
+        }
+    }
+
     public function create()
     {
         return new MongoDocument($this);
