@@ -34,3 +34,23 @@ Event
 + `Event unbind($name, $callback)`
 + `Event unbindAll($name)`
 + `Event dispatch($name)`
+
+Example
+---
+    // connection
+    $conn = new Tuicha\Mongo;
+
+    // database
+    $db = $conn->database;
+
+    // collection
+    $col = $db->collection;
+
+    // cursor and iteration
+    foreach ($col->find() as $doc) {
+        $doc['some value'] = array(1,2);
+        // will use $set
+        $doc->save();
+    }
+
+
