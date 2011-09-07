@@ -24,6 +24,18 @@ class MongoDocument implements \ArrayAccess
         $this->_pzDoc     = $doc;
     }
 
+    // getArray() {{{
+    /**
+     *  Return the current array version of the document
+     *
+     *  @return array
+     */
+    public function getArray()
+    {
+        return $this->_pzCurrent;
+    }
+    // }}}
+
     /* ArrayAccess {{{ */
     public function offsetExists($index) 
     {
