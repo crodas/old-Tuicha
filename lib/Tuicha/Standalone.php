@@ -33,4 +33,19 @@ abstract class Standalone
         self::$_db[$name] = $conn->selectDB($db);
     }
 
+    public function save($obj)
+    {
+        return $this->col->save($obj);
+    }
+
+    public function find($query = array(), $fields = array())
+    {
+        return $this->col->find($query, $fields);
+    }
+
+    public function findOne($query = array(), $fields = array())
+    {
+        return $this->col->findOne($query, $fields);
+    }
+
 }

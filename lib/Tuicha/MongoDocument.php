@@ -132,6 +132,7 @@ class MongoDocument implements \ArrayAccess
                 }
                 unset($document['$pull']);
             }
+
             $this->_pzCollection->update($criteria, $document, compact('safe', 'fsync'));
         }
         $this->_pzDoc = $current;
@@ -198,7 +199,7 @@ class MongoDocument implements \ArrayAccess
         }
 
         foreach ($pProp as $prop) {
-            if (!isset($current[$prop])) {
+            if (!isset($current[$prop]) && !is_null($current[$prop])) {
                 if ($namespace) {
                     if (is_numeric($prop)) {
                         $document['$pull'][$namespace][] = $original[$prop];
@@ -212,7 +213,7 @@ class MongoDocument implements \ArrayAccess
         }
 
         foreach ($document as $key => $value) {
-            if (empty($value)) {
+            if (!isset($value) && !is_null($value)) {
                 unset($document[$key]);
             }
         }
