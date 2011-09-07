@@ -182,7 +182,7 @@ class MongoDocument implements \ArrayAccess
                 $name = $prop;
             }
 
-            if (!isset($original[$prop]) || $original[$prop] !== $current[$prop]) {
+            if (!array_key_exists($prop, $original) || $original[$prop] !== $current[$prop]) {
                 if ($name == '_id') {
                     throw new \MongoException("Modify on _id not allowed on update");
                 }
@@ -199,7 +199,7 @@ class MongoDocument implements \ArrayAccess
         }
 
         foreach ($pProp as $prop) {
-            if (!isset($current[$prop]) && !is_null($current[$prop])) {
+            if (!array_key_exists($prop, $current)) {
                 if ($namespace) {
                     if (is_numeric($prop)) {
                         $document['$pull'][$namespace][] = $original[$prop];
