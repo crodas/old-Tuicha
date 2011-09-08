@@ -48,4 +48,14 @@ abstract class Standalone
         return $this->col->findOne($query, $fields);
     }
 
+    public function delete($query = array(), $options = array())
+    {
+        return $this->col->remove($query, $options);
+    }
+
+    public function remove($query = array(), $options = array())
+    {
+        return $this->col->remove($query, $options);
+    }
+
 }
