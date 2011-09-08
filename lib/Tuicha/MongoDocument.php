@@ -107,6 +107,9 @@ class MongoDocument implements \ArrayAccess
             // updates, a bit tricky
             $document = array();
             $this->_getDocumentTosave($document, $this->_pzDoc, $current);
+            if (empty($document)) {
+                return $this;
+            }
 
             // trigger events 
             $args['document'] = &$document;

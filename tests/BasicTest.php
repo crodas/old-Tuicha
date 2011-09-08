@@ -101,6 +101,12 @@ class BasicTest extends PHPUnit_Framework_TestCase
         $doc->save();
         $tmp = $this->compareFindOne(array('_id' => 2));
         $this->assertEquals($tmp['foo'], $doc['foo']);
+
+        // calling save with no change was bogus
+        // and saved an empty document
+        $doc->save();
+        $tmp = $this->compareFindOne(array('_id' => 2));
+        $this->assertEquals($tmp['foo'], $doc['foo']);
     }
 
     /**
