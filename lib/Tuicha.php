@@ -20,3 +20,4 @@ require __DIR__ . "/Tuicha/MongoCollection.php";
 require __DIR__ . "/Tuicha/MongoCursor.php";
 require __DIR__ . "/Tuicha/Event.php";
 require __DIR__ . "/Tuicha/MongoDocument.php";
+require __DIR__ . "/Tuicha/Standalone.php";

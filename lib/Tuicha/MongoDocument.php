@@ -66,6 +66,10 @@ class MongoDocument implements \ArrayAccess
         return $this->offsetGet($index);
     }
 
+    public function __isset($index) {
+        return array_key_exists($index, $this->_pzCurrent);
+    }
+
     public function __set($index, $value) {
         return $this->offsetSet($index, $value);
     }
